@@ -37,7 +37,6 @@ func main() {
 	accessExpiry, _ := time.ParseDuration(os.Getenv("JWT_ACCESS_EXPIRY"))
 	refreshExpiry, _ := time.ParseDuration(os.Getenv("JWT_REFRESH_EXPIRY"))
 
-   // Repository //
 	txManager := database.NewPgxTransactionManager(db)
 	userRepo := database.NewUserRegisterRepository(db)
 	patientRepo := database.NewPatientRegisterRepository(db)
@@ -115,6 +114,9 @@ func main() {
       scheduleRepo,
 	  bookappointmentRepo,
 	)
+	RefreshTokenUsecase := usecase.NewRefreshTokenUsecase(
+		JWTService,
+	)
 	 
     // Handlers // 
 	registerHandler := controller.NewRegisterUserHandler(registerUsecase)
@@ -127,6 +129,7 @@ func main() {
 	getAvailableSlotHandler := appointmentController.NewGetAvailableSlotsHandler(getAvailableSlotUsecase)
 	updateScheduleHandler := appointmentController.NewUpdateScheduleHandler(updateScheduleUsecase)
     bookAppointmentHandler := appointmentController.NewBookAppointmentHandler(bookAppointmentUsecase)
+	RefreshTokenHandler := controller.NewRefreshTokenHandler(RefreshTokenUsecase)
 	// Authentication Handlers //
 	Authenticationhandlers := http.Handlers{
 		Register:     registerHandler,
@@ -136,6 +139,8 @@ func main() {
 		CreateSpecialization: specilizationHandler,
 		DoctorInviation: doctorInvitationHandler,
 		DoctorRegisteration: doctorRegisterationHandler,
+		RefreshToken: RefreshTokenHandler,
+
 	}
     
 	// Appointment Handler // 

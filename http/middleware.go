@@ -12,6 +12,7 @@ import (
 const (
 	AuthorizationHeader = "Authorization"
 	BearerPrefix        = "Bearer "
+	AccessTokenCookie   = "access_token"
 	CtxUserIDKey        = "user_id"
 	CtxUserRoleKey      = "user_role"
 )
@@ -32,26 +33,21 @@ func NewAuthMiddleware(validator TokenValidator) *AuthMiddleware {
 
 func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader(AuthorizationHeader)
+		var tokenStr string
 
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "authorization header is required",
-			})
-			return
+		if cookieToken, err := c.Cookie(AccessTokenCookie); err == nil && cookieToken != "" {
+			tokenStr = cookieToken
+		} else {
+			authHeader := c.GetHeader(AuthorizationHeader)
+			if authHeader != "" && strings.HasPrefix(authHeader, BearerPrefix) {
+				tokenStr = strings.TrimSpace(strings.TrimPrefix(authHeader, BearerPrefix))
+			}
 		}
 
-		if !strings.HasPrefix(authHeader, BearerPrefix) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid authorization header format",
-			})
-			return
-		}
-
-		tokenStr := strings.TrimSpace(strings.TrimPrefix(authHeader, BearerPrefix))
 		if tokenStr == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "token string cannot be empty",
+				"code":  "UNAUTHORIZED",
+				"error": "authentication token is missing",
 			})
 			return
 		}
@@ -74,7 +70,7 @@ func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		}
 
 		c.Set(CtxUserIDKey, claims.UserID)
-		c.Set(CtxUserRoleKey, claims.Role)
+		c.Set(CtxUserRoleKey, string(claims.Role)) 
 
 		c.Next()
 	}

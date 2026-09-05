@@ -41,11 +41,21 @@ type LoginInput struct {
 	Password string
 }
 
+type UserOutput struct {
+	ID string   `json:"user_id"`
+	Name string   `json:"name"`
+    Email string `json:"email"`
+	Gender string   `json:"gender"`
+	IsVerified bool        `json:"is_verified"`
+	Role         string   `json:"role"`
+}
+
+
+
 type LoginOutput struct {
 	AccessToken  string
 	RefreshToken string
-	UserID       string
-	Role domain.Role
+	User        UserOutput
 	LoggedInAt   time.Time
 }
 
@@ -71,12 +81,21 @@ func (uc *LoginUsecase) Execute(ctx context.Context, input LoginInput) (*LoginOu
 	if err != nil {
 		return nil, err
 	}
+   
+   
 
+	
+	UserOutput := UserOutput{
+		ID: user.ID(),
+		Name: user.Name(),
+		Email: string(user.Email().Value()),
+		Gender: string(user.Gender()),
+		Role: string(user.Role()),
+	}
 	return &LoginOutput{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		UserID:       user.ID(),
-		Role:  user.Role(),
+		User:  UserOutput,
 		LoggedInAt:   time.Now().UTC(),
 	}, nil
 }

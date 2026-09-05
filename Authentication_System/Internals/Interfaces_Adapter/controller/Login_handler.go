@@ -2,13 +2,10 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-
-	domain "my-appointment-app/Authentication_System/Internals/Domain"
 	"my-appointment-app/Authentication_System/Internals/Usecase"
 )
 
@@ -20,8 +17,7 @@ type loginRequestDTO struct {
 type loginResponseDTO struct {
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
-	UserID       string    `json:"user_id"`
-	Role  domain.Role       `josn:"role"`
+	User        usecase.UserOutput  `json:"user"`
 	LoggedInAt   time.Time `json:"logged_in_at"`
 }
 
@@ -40,8 +36,8 @@ func (h *LoginHandler) Login(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "invalid input parameters",
-			"details": err.Error(),
+			"message": err.Error(),
+			"data": nil,
 		})
 		return
 	}
@@ -51,30 +47,63 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		Password: req.Password,
 	}
 
-    fmt.Printf("Email: %s | Password: %s\n", input.Email, input.Password)
 	output, err := h.loginUsecase.Execute(c.Request.Context(), input)
 	if err != nil {
 		h.handleUsecaseError(c, err)
 		return
-	}
+	} 
+
+
+	c.SetCookie(
+		"access_token",
+		output.AccessToken,
+		900,
+		"/",
+		"", 
+		false, 
+		true, 
+	)
+
+	c.SetCookie(
+		"refresh_token",
+		output.RefreshToken,
+		604800,
+		"/api/v1/auth/refresh",
+		"",    
+		false,
+		true,  
+	)
+
+      
+c.SetCookie(
+    "user_role",
+    output.User.Role,
+    604800,
+    "/",   
+    "",   
+    false, 
+    false, 
+)
 
 	response := loginResponseDTO{
 		AccessToken:  output.AccessToken,
 		RefreshToken: output.RefreshToken,
-		UserID:       output.UserID,
-		Role: output.Role,
+		User: output.User,
 		LoggedInAt:   output.LoggedInAt,
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User Logged In Successfully",
+		"data": response,
+	})
 }
 
 func (h *LoginHandler) handleUsecaseError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, usecase.ErrInvalidCredentials):
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error() , "data": nil})
 	case errors.Is(err, usecase.ErrEmailNotVerified):
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		c.JSON(http.StatusForbidden, gin.H{"message": err.Error() , "data": nil})
 	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "an unexpected error occurred"})
 	}

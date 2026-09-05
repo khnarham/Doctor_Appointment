@@ -80,7 +80,6 @@ type EmailReceptionistSender interface {
 
 
 type UserRepository interface {
-	// Single method: Directly creates receptionist user in `users` table with doctor_id foreign key
 	CreateReceptionistUser(ctx context.Context, email, hashedPassword, fullName, doctorID string) (string, error)
 }
 

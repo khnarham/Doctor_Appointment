@@ -124,3 +124,33 @@ func (s *JWTService) ValidateAccessToken(tokenStr string) (*TokenClaims, error) 
 		ExpiresAt: claims.ExpiresAt.Time,
 	}, nil
 }
+
+
+
+
+func (s *JWTService) ValidateRefreshToken(tokenStr string) (*TokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &UserClaims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return s.refreshSecret, nil
+	})
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, ErrExpiredToken
+		}
+		return nil, ErrInvalidToken
+	}
+
+	claims, ok := token.Claims.(*UserClaims)
+	if !ok || !token.Valid {
+		return nil, ErrInvalidToken
+	}
+
+	return &TokenClaims{
+		UserID:    claims.UserID,
+		Role:      claims.Role,
+		ExpiresAt: claims.ExpiresAt.Time,
+	}, nil
+}
