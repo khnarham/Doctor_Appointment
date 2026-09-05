@@ -130,6 +130,9 @@ func main() {
 	updateScheduleHandler := appointmentController.NewUpdateScheduleHandler(updateScheduleUsecase)
     bookAppointmentHandler := appointmentController.NewBookAppointmentHandler(bookAppointmentUsecase)
 	RefreshTokenHandler := controller.NewRefreshTokenHandler(RefreshTokenUsecase)
+
+
+
 	// Authentication Handlers //
 	Authenticationhandlers := http.Handlers{
 		Register:     registerHandler,
