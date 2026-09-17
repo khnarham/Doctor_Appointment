@@ -20,8 +20,18 @@ type Handlers struct {
 	DoctorInviation      *authController.AdminDoctorHandler
 	DoctorRegisteration  *authController.DoctorRegistrationHandler
 	CreateSpecialization *authController.SpecializationHandler
+	ListSpecialization   *authController.ListSpecializationHandler
+	Logout               *authController.LogoutHandler
 	RefreshToken         *authController.RefreshTokenHandler
 	Me                   *authController.MeHandler
+	ReceptionistInvitation *authController.ReceptionistHandler
+	ReceptionistAccepting *authController.AcceptInvitationHandler 
+	GetDoctor              *authController.GetDoctorHandler
+	SpecilizationOperation  *authController.SpecializationOperationHandler
+	GetDoctors               *authController.GetDoctorsHandler
+	GetPatient              *authController.GetPatientProfileHandler
+	RegisterWalkinPatient  *authController.RegisterWalkInPatientHandler
+
 }
 
 type ScheduleHandlers struct {
@@ -29,12 +39,18 @@ type ScheduleHandlers struct {
 	Update   *appointmentController.UpdateScheduleHandler
 	Cancel   *appointmentController.CancelScheduleHandler
 	GetSlots *appointmentController.GetAvailableSlotsHandler
+	GetDoctorSchedules *appointmentController.GetDoctorSchedulesHandler
 }
 
 type AppointmentHandlers struct {
 	Book         *appointmentController.BookAppointmentHandler
 	Cancel       *appointmentController.CancelAppointmentHandler
 	UpdateStatus *appointmentController.UpdateAppointmentStatusHandler
+	GetPatientAppointment *appointmentController.GetPatientAppointmentsHandler
+	ReviewAppointment *appointmentController.SubmitReviewHandler
+	GetDoctorAppointment *appointmentController.GetDoctorAppointmentsHandler
+	GetAnalytics  *appointmentController.AnalyticsHandler
+	GetDoctorAnalytics *appointmentController.DoctorAnalyticsHandler
 }
 
 type AppHandlers struct {
@@ -51,13 +67,23 @@ func RegisterAuthRoutes(rg *gin.RouterGroup, h Handlers) {
 		auth.GET("/verify-email", h.Verification.VerifyEmail)
 		auth.POST("/accept-invite", h.DoctorRegisteration.RegisterDoctor)
 		auth.POST("/refresh", h.RefreshToken.RefreshToken)
+		auth.POST("/logout",h.Logout.Logout)
+		auth.POST("/Receptionist-invite", h.ReceptionistInvitation.InviteReceptionist)
+		auth.POST("/Receptionist-accept", h.ReceptionistAccepting.AcceptInvitation)
 
+		auth.POST("/create-specialization", h.CreateSpecialization.Create)
+		auth.GET("/list-specialization" , h.ListSpecialization.ListSpecializations)
+		auth.POST("/Invitation", h.DoctorInviation.InviteDoctor)
+		auth.PUT("/specialization/update/:id", h.SpecilizationOperation.Update)
+		auth.DELETE("/specialization/delete/:id", h.SpecilizationOperation.Delete)
+		auth.GET("/doctors" , h.GetDoctors.GetDoctors)
+		auth.POST("/receptionist/patients/walk-in", h.RegisterWalkinPatient.Handle)
 		protected := auth.Group("")
 		protected.Use(h.AuthMiddleware.Authenticate())
-		{
+		{ 
+			protected.GET("/doctor" , h.GetDoctor.GetDoctorProfile)
+			protected.GET("/patients/me" , h.GetPatient.GetProfile)
 			protected.GET("/me", h.Me.GetMe)
-			protected.POST("/Invitation", h.DoctorInviation.InviteDoctor)
-			protected.POST("/create-specialization", h.CreateSpecialization.Create)
 		}
 	}
 }
@@ -68,6 +94,7 @@ func RegisterScheduleRoutes(rg *gin.RouterGroup, h ScheduleHandlers, authMW gin.
 		schedules.POST("/slots", h.GetSlots.GetAvailableSlots)
 
 		protected := schedules.Group("")
+		protected.GET("/doctor/:id" ,h.GetDoctorSchedules.GetDoctorSchedulesWithSlots)
 		protected.Use(authMW)
 		{
 			protected.POST("", h.Create.CreateSchedule)
@@ -79,8 +106,13 @@ func RegisterScheduleRoutes(rg *gin.RouterGroup, h ScheduleHandlers, authMW gin.
 
 func RegisterAppointmentRoutes(rg *gin.RouterGroup, h AppointmentHandlers, authMW gin.HandlerFunc) {
 	appointments := rg.Group("/appointments")
+	appointments.GET("doctors/:id/appointments", h.GetDoctorAppointment.GetAppointments)
+	appointments.GET("/analytics/financial-overview" , h.GetAnalytics.GetFinancialOverview)
+	appointments.GET("/doctors/dashboard/analytics/:id" , h.GetDoctorAnalytics.GetDashboard)
 	appointments.Use(authMW) 
 	{
+		appointments.POST("/reviews" , h.ReviewAppointment.SubmitReview)
+		appointments.GET("/my-appointment/:id" , h.GetPatientAppointment.GetAppointments)
 		appointments.POST("", h.Book.BookAppointment)
 		appointments.PATCH("/:id/cancel", h.Cancel.CancelAppointment)
 		appointments.PATCH("/:id/status", h.UpdateStatus.UpdateAppointmentStatus)
@@ -94,6 +126,7 @@ func SetupRouter(h AppHandlers) *gin.Engine {
 		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length", "Set-Cookie"},
 		AllowCredentials: true,
 	}))
 

@@ -2,8 +2,17 @@ package usecase
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
+)
+
+// Custom Sentinel Errors
+var (
+	ErrInvitationNotFound  = errors.New("invitation token not found or invalid")
+	ErrInvitationInvalid   = errors.New("invitation token is expired or already used")
+	ErrPasswordHashing     = errors.New("failed to hash receptionist password")
+	ErrReceptionistCreationFailed = errors.New("failed to create receptionist user")
+	ErrTokenUpdateFailed   = errors.New("failed to update invitation token status")
 )
 
 type AcceptInvitationInput struct {
@@ -41,16 +50,16 @@ func (uc *AcceptInvitationUsecase) Execute(ctx context.Context, input AcceptInvi
 
 	inv, err := uc.invRepo.GetByToken(ctx, input.Token)
 	if err != nil {
-		return nil, fmt.Errorf("invalid token: %w", err)
+		return nil,  ErrInvitationNotFound
 	}
 
 	if err := inv.IsValid(now); err != nil {
-		return nil, fmt.Errorf("invitation invalid: %w", err)
+		return nil,  ErrInvitationInvalid
 	}
 
 	hashedPassword, err := uc.hasher.Hash(input.Password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		return nil, ErrPasswordHashing
 	}
 
 	receptionistID, err := uc.userRepo.CreateReceptionistUser(
@@ -58,10 +67,10 @@ func (uc *AcceptInvitationUsecase) Execute(ctx context.Context, input AcceptInvi
 		inv.Email(),
 		hashedPassword,
 		input.FullName,
-		inv.DoctorID(),
+		inv.CreaterID(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create receptionist user: %w", err)
+		return nil, ErrReceptionistCreationFailed
 	}
 
 	if err := inv.MarkAsUsed(now); err != nil {
@@ -69,12 +78,12 @@ func (uc *AcceptInvitationUsecase) Execute(ctx context.Context, input AcceptInvi
 	}
 
 	if err := uc.invRepo.Update(ctx, inv); err != nil {
-		return nil, fmt.Errorf("failed to update token status: %w", err)
+		return nil, ErrTokenUpdateFailed
 	}
 
 	return &AcceptInvitationOutput{
 		ReceptionistID: receptionistID,
 		Email:          inv.Email(),
-		DoctorID:       inv.DoctorID(),
+		DoctorID:       inv.CreaterID(),
 	}, nil
 }

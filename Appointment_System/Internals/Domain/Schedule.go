@@ -214,6 +214,48 @@ func (s *DoctorSchedule) GenerateSlotsForDate(targetDate time.Time) ([]SlotInter
 }
 
 
+
+type BaseSlot struct {
+	Start string
+	End   string
+}
+
+func (s *DoctorSchedule) GenerateBaseSlots() []BaseSlot {
+	if !s.isActive {
+		return nil
+	}
+
+	startMins := s.timeRange.start.Minutes()
+	endMins := s.timeRange.end.Minutes()
+	durationMins := int(s.slotDuration.Minutes())
+
+	if durationMins <= 0 {
+		return nil
+	}
+
+	var slots []BaseSlot
+	current := startMins
+
+	for {
+		next := current + durationMins
+		if next > endMins {
+			break
+		}
+
+		startClock, _ := NewClockTimeFromMinutes(current)
+		endClock, _ := NewClockTimeFromMinutes(next)
+
+		slots = append(slots, BaseSlot{
+			Start: startClock.String(),
+			End:   endClock.String(),
+		})
+
+		current = next
+	}
+
+	return slots
+}
+
 func ParseDayOfWeek(s string) (DayOfWeek, error) {
 	switch s {
 	case "SUNDAY":

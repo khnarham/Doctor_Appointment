@@ -25,13 +25,13 @@ type RegisterDoctorRequest struct {
 	Password        string  `json:"password" binding:"required,min=8"`
 	Gender          string  `json:"gender" binding:"required"`
 	LicenseNumber   string  `json:"license_number" binding:"required"`
-	ConsultationFee float64 `json:"consultation_fee" binding:"required,gte=0"`
+	ConsultationFee float64 `json:"consultation_fee" binding:"gte=0"` // 'required' removed so 0.0 doesn't trigger 400
 }
 
 func (h *DoctorRegistrationHandler) RegisterDoctor(c *gin.Context) {
 	var req RegisterDoctorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid registration payload", "details": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"message" : err.Error() , "data": nil})
 		return
 	}
 
@@ -47,12 +47,12 @@ func (h *DoctorRegistrationHandler) RegisterDoctor(c *gin.Context) {
 	output, err := h.registerUseCase.Execute(c.Request.Context(), input)
 	if err != nil {
 		switch {
-		case errors.Is(err, domain.ErrInviteExpired), errors.Is(err, domain.ErrInviteUsed):
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, domain.ErrInviteExpired):
+			c.JSON(http.StatusBadRequest, gin.H{"message" : err.Error() , "data": nil})
 		case errors.Is(err, domain.InvalidGender):
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message" : err.Error() , "data": nil})
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message" : err.Error() , "data": nil})
 		}
 		return
 	}

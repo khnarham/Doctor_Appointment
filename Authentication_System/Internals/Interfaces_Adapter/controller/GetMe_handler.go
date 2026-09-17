@@ -47,6 +47,6 @@ func (h *MeHandler) GetMe(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User Get Successfully",
-		"data": *output,
+		"data": output,
 	})
 }

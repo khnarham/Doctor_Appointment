@@ -117,3 +117,56 @@ func mapRowToUser(row pgx.Row, email domain.Email) (*domain.User, error) {
 
 	return userEntity, nil
 }
+
+func (r *userRegisterRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
+    exec := getExecutor(ctx, r.db)
+
+    query := `
+        SELECT id, name, email, password, role, gender, is_verified, created_at, updated_at
+        FROM users
+        WHERE id = $1
+        LIMIT 1
+    `
+
+    var model UserModel
+
+    err := exec.QueryRow(ctx, query, id).Scan(
+        &model.ID,
+        &model.Name,
+        &model.Email,
+        &model.Password,
+        &model.Role,
+        &model.Gender,
+        &model.IsVerified,
+        &model.CreatedAt,
+        &model.UpdatedAt,
+    )
+    if err != nil {
+        if errors.Is(err, pgx.ErrNoRows) {
+            return nil, err
+        }
+        return nil, fmt.Errorf("failed to scan user row by id: %w", err)
+    }
+
+    emailObj, err := domain.NewEmail(model.Email)
+    if err != nil {
+        return nil, fmt.Errorf("invalid email stored in database: %w", err)
+    }
+
+    userEntity, err := domain.ReconstituteUser(
+        model.ID,
+        model.Name,
+        emailObj,
+        model.Password,
+        model.IsVerified,
+        domain.Role(model.Role),
+        domain.Gender(model.Gender),
+        model.CreatedAt,
+        model.UpdatedAt,
+    )
+    if err != nil {
+        return nil, fmt.Errorf("failed to reconstitute user entity: %w", err)
+    }
+
+    return userEntity, nil
+}

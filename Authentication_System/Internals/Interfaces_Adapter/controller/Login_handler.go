@@ -59,7 +59,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		output.AccessToken,
 		900,
 		"/",
-		"", 
+		"localhost", 
 		false, 
 		true, 
 	)
@@ -68,8 +68,8 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		"refresh_token",
 		output.RefreshToken,
 		604800,
-		"/api/v1/auth/refresh",
-		"",    
+		"/",
+		"localhost",    
 		false,
 		true,  
 	)
@@ -101,7 +101,7 @@ c.SetCookie(
 func (h *LoginHandler) handleUsecaseError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, usecase.ErrInvalidCredentials):
-		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error() , "data": nil})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error() , "data": nil})
 	case errors.Is(err, usecase.ErrEmailNotVerified):
 		c.JSON(http.StatusForbidden, gin.H{"message": err.Error() , "data": nil})
 	default:

@@ -34,20 +34,27 @@ func (h *ScheduleHandler) CreateSchedule(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request payload: " + err.Error(),
+			"message": err.Error(),
+			"data": nil,
 		})
 		return
 	}
 
 	dayOfWeek, err := parseDayOfWeek(req.Day)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+			"data": nil,
+		})
 		return
 	}
 
 	timeRange, err := parseTimeRange(req.StartTime, req.EndTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+			"data": nil,
+		})
 		return
 	}
 
@@ -61,7 +68,8 @@ func (h *ScheduleHandler) CreateSchedule(c *gin.Context) {
 	output, err := h.createScheduleUC.Execute(c.Request.Context(), cmd)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error": err.Error(),
+			"message": err.Error(),
+			"data": nil,
 		})
 		return
 	}

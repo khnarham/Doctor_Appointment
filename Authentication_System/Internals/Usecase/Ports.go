@@ -40,7 +40,6 @@ type ReceptionistInvitationRepository interface {
 
 type UserReceptionistRepository interface {
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
-	CreateReceptionistUser(ctx context.Context, email, hashedPassword, name string) (string, error) // Returns new receptionistID
 }
 
 type SendVerificationEmail interface{
@@ -80,7 +79,11 @@ type EmailReceptionistSender interface {
 
 
 type UserRepository interface {
-	CreateReceptionistUser(ctx context.Context, email, hashedPassword, fullName, doctorID string) (string, error)
+	CreateReceptionistUser(ctx context.Context, email string, hashedPassword string, fullName string, doctorID string) (string, error)
+}
+
+type GetDoctorRepository interface {
+	FindByUserID(ctx context.Context, userID string) (*domain.Doctor, error)
 }
 
 type TransactionManager interface {
@@ -150,3 +153,15 @@ func (e *EmailVerificationData) ValidateExpiration() error {
 	return nil
 }
 
+type GetDoctorsRepository interface {
+	GetDoctors(ctx context.Context, filter DoctorFilter) ([]*domain.Doctor, error)
+}
+
+
+type SpecializationOperationRepository interface {
+	GetByID(ctx context.Context, id string) (*domain.Specialization, error)
+	GetByName(ctx context.Context, name string) (*domain.Specialization, error)
+	Update(ctx context.Context, spec *domain.Specialization) error
+	Delete(ctx context.Context, id string) error
+	HasAssociatedDoctors(ctx context.Context, id string) (bool, error)
+}

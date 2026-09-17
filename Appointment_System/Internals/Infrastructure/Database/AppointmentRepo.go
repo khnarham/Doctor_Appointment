@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	domain "my-appointment-app/Appointment_System/Internals/Domain"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -66,4 +67,77 @@ func (r *pgxAppointmentRepository) GetBookedSlotTimesByDoctorAndDate(
 	}
 
 	return bookedSlots, nil
+}
+
+
+
+func (r *pgxAppointmentRepository) GetBookedAppointmentsByDoctorID(ctx context.Context, doctorID string) ([]domain.Appointment, error) {
+	query := `
+		SELECT 
+			id, 
+			patient_id, 
+			doctor_id, 
+			schedule_id, 
+			appointment_date, 
+			start_time, 
+			end_time, 
+			status
+		FROM appointments
+		WHERE doctor_id = $1 
+		  AND status != $2
+	`
+
+	rows, err := r.db.Query(ctx, query, doctorID, string(domain.StatusCancelled))
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute GetBookedAppointmentsByDoctorID query: %w", err)
+	}
+	defer rows.Close()
+
+	var appointments []domain.Appointment
+
+	for rows.Next() {
+		var (
+			id         string
+			patientID  string
+			docID      string
+			scheduleID string
+			date       time.Time
+			startTime  string
+			endTime    string
+			status     string
+		)
+
+		err := rows.Scan(
+			&id,
+			&patientID,
+			&docID,
+			&scheduleID,
+			&date,
+			&startTime,
+			&endTime,
+			&status,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan appointment row: %w", err)
+		}
+
+		appt := domain.ReconstituteAppointment(
+			id,
+			patientID,
+			docID,
+			scheduleID,
+			date,
+			startTime,
+			endTime,
+			domain.AppointmentStatus(status),
+		)
+
+		appointments = append(appointments, *appt)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error while iterating appointment rows: %w", err)
+	}
+
+	return appointments, nil
 }

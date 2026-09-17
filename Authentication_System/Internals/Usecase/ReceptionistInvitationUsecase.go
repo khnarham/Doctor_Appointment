@@ -30,11 +30,13 @@ func NewInviteReceptionistUsecase(
 	invRepo ReceptionistInvitationRepository,
 	userRepo UserReceptionistRepository,
 	emailSender EmailReceptionistSender,
+	generater  IToken,
 ) *InviteReceptionistUsecase {
 	return &InviteReceptionistUsecase{
 		invRepo:     invRepo,
 		userRepo:    userRepo,
 		emailSender: emailSender,
+		generater: generater,
 	}
 }
 

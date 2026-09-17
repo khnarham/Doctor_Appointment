@@ -69,6 +69,9 @@ func NewReceptionistInvitation(
 	}, nil
 }
 
+
+
+
 func ReconstituteReceptionistInvitation(
 	id string,
 	doctorId string,
@@ -122,7 +125,7 @@ func (inv *ReceptionistInvitation) MarkAsExpired(now time.Time) error {
 
 
 func (inv *ReceptionistInvitation) ID() string               { return inv.id }
-func (inv *ReceptionistInvitation) DoctorID() string         { return inv.createrID }
+func (inv *ReceptionistInvitation) CreaterID() string         { return inv.createrID }
 func (inv *ReceptionistInvitation) Email() string            { return inv.email }
 func (inv *ReceptionistInvitation) Token() string            { return inv.token }
 func (inv *ReceptionistInvitation) Status() InvitationStatus { return inv.status }

@@ -7,12 +7,17 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrInvalidSpecializationName = errors.New("specialization name cannot be empty")
+var (
+	ErrInvalidSpecializationName = errors.New("specialization name cannot be empty")
+	ErrSpecializationNotFound    = errors.New("specialization not found")
+	ErrSpecializationNameExists  = errors.New("specialization name already exists")
+	ErrSpecializationInUse       = errors.New("cannot delete specialization assigned to active doctors")
+)
 
 type Specialization struct {
 	id          string
 	name        string
-	description string 
+	description string
 	createdAt   time.Time
 	updatedAt   time.Time
 }
@@ -52,8 +57,21 @@ func ReconstituteSpecialization(
 		updatedAt:   updatedAt,
 	}
 }
+
+func (s *Specialization) Update(name string, description string) error {
+	if name == "" {
+		return ErrInvalidSpecializationName
+	}
+
+	s.name = name
+	s.description = description
+	s.updatedAt = time.Now().UTC()
+	return nil
+}
+
 func (s *Specialization) ID() string          { return s.id }
 func (s *Specialization) Name() string        { return s.name }
 func (s *Specialization) Description() string { return s.description }
 func (s *Specialization) CreatedAt() time.Time { return s.createdAt }
 func (s *Specialization) UpdatedAt() time.Time { return s.updatedAt }
+

@@ -15,6 +15,11 @@ type ScheduleRepository interface {
 
 type AppointmentReader interface {
 	GetBookedSlotTimesByDoctorAndDate(ctx context.Context, doctorID string, date time.Time) ([]string, error)
+	GetBookedAppointmentsByDoctorID(ctx context.Context , doctorID string) ([]domain.Appointment , error)
+}
+
+type DoctorAppointmentReader interface {
+	GetByDoctorID(ctx context.Context, doctorID string) ([]*domain.Appointment, error)
 }
 
 type AppointmentRepository interface {

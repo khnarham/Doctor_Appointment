@@ -38,13 +38,13 @@ func (h *AdminDoctorHandler) InviteDoctor(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, usecase.ErrUserAlreadyExists):
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			c.JSON(http.StatusConflict, gin.H{"message" : err.Error() , "data": nil})
 		case errors.Is(err, usecase.ErrInviteAlreadyActive):
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message" : err.Error() , "data": nil})
 		case errors.Is(err , usecase.ErrSpecializationAlreadyExists):
-		    c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		    c.JSON(http.StatusBadRequest, gin.H{"message" : err.Error() , "data": nil})
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message" : err.Error() , "data": nil})
 		}
 		return
 	}

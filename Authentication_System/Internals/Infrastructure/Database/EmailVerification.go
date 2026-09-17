@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	domain "my-appointment-app/Authentication_System/Internals/Domain"
-	"my-appointment-app/Authentication_System/Internals/Usecase" // Ensure path matches your actual package
+	usecase "my-appointment-app/Authentication_System/Internals/Usecase"
 	"time"
 
 	"github.com/jackc/pgx/v5"

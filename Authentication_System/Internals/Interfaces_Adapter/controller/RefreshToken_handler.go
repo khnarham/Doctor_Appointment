@@ -34,8 +34,8 @@ func (h *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "invalid_request",
-			"details": "refresh_token field is required",
+			"message":  err.Error(),
+			"data": "refresh_token field is required",
 		})
 		return
 	}
@@ -61,11 +61,13 @@ func (h *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 		}
 		return
 	}
-
+    
+	c.SetCookie("access_token", tokens.AccessToken, 900, "/", "", false, true)
+    c.SetCookie("refresh_token", tokens.RefreshToken, 604800, "/", "", false, true)
     
 	 response := RefreshTokenResponse{
 		AccessToken: tokens.AccessToken,
-		RefreshToken: tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
 	 }
 	c.JSON(http.StatusOK, gin.H{
         "message": "User LoggedIn successFully",

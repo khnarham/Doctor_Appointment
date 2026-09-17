@@ -11,7 +11,7 @@ import (
 
 const (
 	AuthorizationHeader = "Authorization"
-	BearerPrefix        = "Bearer "
+	BearerPrefix        = "Bearer"
 	AccessTokenCookie   = "access_token"
 	CtxUserIDKey        = "user_id"
 	CtxUserRoleKey      = "user_role"

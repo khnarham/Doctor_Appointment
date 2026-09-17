@@ -34,6 +34,39 @@ func (h *EmailVerificationGinHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
+
+	c.SetCookie(
+		"access_token",
+		output.AccessToken,
+		900,
+		"/",
+		"", 
+		false, 
+		true, 
+	)
+
+	c.SetCookie(
+		"refresh_token",
+		output.RefreshToken,
+		604800,
+		"/api/v1/auth/refresh",
+		"",    
+		false,
+		true,  
+	)
+
+      
+c.SetCookie(
+    "user_role",
+    output.Role,
+    604800,
+    "/",   
+    "",   
+    false, 
+    false, 
+)
+
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "We have Sent an verificaiton link to you Email",
 		"data":    output,

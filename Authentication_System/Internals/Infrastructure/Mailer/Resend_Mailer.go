@@ -1,27 +1,28 @@
-package Mailer
+package mailer
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/resend/resend-go/v2"
+	brevo "github.com/getbrevo/brevo-go/lib"
 )
 
-type resendMailer struct {
-	client *resend.Client
+type brevoMailer struct {
+	client *brevo.APIClient
 	from   string
 }
 
-func NewResendMailer(apiKey string, from string) *resendMailer {
-	client := resend.NewClient(apiKey)
+func NewBrevoMailer(apiKey string, from string) *brevoMailer {
+	cfg := brevo.NewConfiguration()
+	cfg.AddDefaultHeader("api-key", apiKey)
 
-	return &resendMailer{
-		client: client,
+	return &brevoMailer{
+		client: brevo.NewAPIClient(cfg),
 		from:   from,
 	}
 }
 
-func (r *resendMailer) SendVerificationToken(
+func (b *brevoMailer) SendVerificationToken(
 	ctx context.Context,
 	to string,
 	token string,
@@ -33,33 +34,38 @@ func (r *resendMailer) SendVerificationToken(
 	)
 
 	html := fmt.Sprintf(`
-		<!DOCTYPE html>
-		<html>
-			<body>
-				<h2>Email Verification</h2>
+        <!DOCTYPE html>
+        <html>
+            <body>
+                <h2>Email Verification</h2>
 
-				<p>
-					Please click the button below to verify your email.
-				</p>
+                <p>
+                    Please click the link below to verify your email.
+                </p>
 
-				<a href="%s">
-					Verify Email
-				</a>
-			</body>
-		</html>
-	`, verificationURL)
+                <a href="%s">
+                    Verify Email
+                </a>
+            </body>
+        </html>
+    `, verificationURL)
 
-	params := &resend.SendEmailRequest{
-		From:    r.from,
-		To:      []string{to},
-		Subject: "Verify Your Email",
-		Html:    html,
+	params := brevo.SendSmtpEmail{
+		Sender: &brevo.SendSmtpEmailSender{
+			Email: b.from,
+		},
+		To: []brevo.SendSmtpEmailTo{
+			{
+				Email: to,
+			},
+		},
+		Subject:     "Verify Your Email",
+		HtmlContent: html,
 	}
 
-	_, err := r.client.Emails.Send(params)
-
+	_, _, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, params)
 	if err != nil {
-		return fmt.Errorf("resend send failed: %w", err)
+		return fmt.Errorf("brevo send failed: %w", err)
 	}
 
 	return nil

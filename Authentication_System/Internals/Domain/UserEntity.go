@@ -17,6 +17,7 @@ const (
 	RolePatient Role = "PATIENT"
 	RoleDoctor  Role = "DOCTOR"
 	RoleAdmin   Role = "ADMIN"
+	RoleReceptionst Role = "RECEPTIONIST"
 )
 
 type Gender string

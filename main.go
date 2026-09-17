@@ -2,20 +2,21 @@ package main
 
 import (
 	"log"
+	appointmentDatabase "my-appointment-app/Appointment_System/Internals/Infrastructure/Database"
+	appointmentController "my-appointment-app/Appointment_System/Internals/Interface_Adapter/Controller"
+	appointmentUsecase "my-appointment-app/Appointment_System/Internals/Usecase"
 	Infra "my-appointment-app/Authentication_System/Internals/Infrastructure/Crypto"
 	database "my-appointment-app/Authentication_System/Internals/Infrastructure/Database"
 	jwt "my-appointment-app/Authentication_System/Internals/Infrastructure/JWT"
 	"my-appointment-app/Authentication_System/Internals/Infrastructure/Mailer"
 	"my-appointment-app/Authentication_System/Internals/Interfaces_Adapter/controller"
 	usecase "my-appointment-app/Authentication_System/Internals/Usecase"
-	appointmentController "my-appointment-app/Appointment_System/Internals/Interface_Adapter/Controller"
-	appointmentDatabase "my-appointment-app/Appointment_System/Internals/Infrastructure/Database" 
-	appointmentUsecase "my-appointment-app/Appointment_System/Internals/Usecase"
 	http "my-appointment-app/http"
 	"os"
 	"time"
-)
 
+	"github.com/joho/godotenv"
+)
 func main() {
 	// DB Initilized //
 	db, err := database.InitDB()
@@ -23,15 +24,16 @@ func main() {
 		log.Fatalf("Database initialization failed: %v", err)
 	}
 	// env Initlizzation //
-	resendAPIKey := os.Getenv("RESEND_API_KEY")
-	if resendAPIKey == "" {
-		log.Fatal("RESEND_API_KEY environment variable is missing")
-	}
+    env_err := godotenv.Load()
+    if env_err != nil {
+        log.Println("Warning: .env file not found")
+    }
+	apiKey := os.Getenv("BREVO_API_KEY")
+	if apiKey == "" {
+    log.Fatal("BREVO_API_KEY is missing or empty!")
+}
+	senderEmail := "khnarham5678@gmail.com"
 
-	senderEmail := os.Getenv("SENDER_EMAIL")
-	if senderEmail == "" {
-		senderEmail = "onboarding@resend.dev" 
-	}
 	accessSecret := os.Getenv("JWT_ACCESS_SECRET")
 	refreshSecret := os.Getenv("JWT_REFRESH_SECRET")
 	accessExpiry, _ := time.ParseDuration(os.Getenv("JWT_ACCESS_EXPIRY"))
@@ -50,14 +52,29 @@ func main() {
 	scheduleRepo := appointmentDatabase.NewScheduleRepository(db)
 	appontmentRepo := appointmentDatabase.NewAppointmentRepository(db)
 	bookappointmentRepo := appointmentDatabase.NewPgxBookAppointmentRepository(db)
-     
+	specializationRepo := database.NewSpecializationRepository(db)
+	receptionstInviteRepo := database.NewPostgresReceptionistInvitationRepository(db)
+	receptionistAcceptRepo := database.NewPostgresUserRepository(db)
+	receptionstUserRepo:= database.NewPostgreReceptionstRepo(db)
+	getDoctorRepo  := database.NewGetDoctorRepository(db)
+	specializationOperationRepo := database.NewSpecializationOperationsRepository(db)
+	getDoctorsRepo := database.NewGetDoctorsRepository(db)
+	getPatientAppointmentRepo := appointmentDatabase.NewPatientAppointmentRepository(db)
+	reviewAppointmentRepo := appointmentDatabase.NewReviewRepository(db)
+	getDoctorAppointmentRepo := appointmentDatabase.NewDoctorAppointmentRepository(db)
+    getAnalyticRepo := appointmentDatabase.NewPostgresAnalyticsRepository(db)
+	getDoctorAnalyticRepo := appointmentDatabase.NewDoctorAnalyticsRepository(db)
     // Infrastrcuture
 	hasher := Infra.NewBcryptHasher()
 	tokenGen := Infra.NewCryptoCodeGenerator()
-	emailSender := Mailer.NewResendMailer(resendAPIKey, senderEmail)
 	JWTService := jwt.NewJWTService(accessSecret , refreshSecret , accessExpiry , refreshExpiry)
+	emailSender:= mailer.NewBrevoMailer(apiKey ,senderEmail)
 	authMiddleware := http.NewAuthMiddleware(JWTService)
+	doctoremailSender := mailer.NewBrevoDoctorVerification(apiKey , senderEmail)
+	receptionstemailSender := mailer.NewBrevoReceptionistMailer(apiKey , senderEmail , "")
      
+timeoutContext := 5 * time.Second
+
 	// Usecase // 
 	registerUsecase := usecase.NewRegisterUserUsecase(
      userRepo,
@@ -86,7 +103,7 @@ func main() {
 	doctorInviteRepo,
 	userRepo,
 	sepecilizationRepo,
-	emailSender,
+	doctoremailSender,
     tokenGen,
     )
 	acceptInviteUsecase := usecase.NewRegisterDoctorWithInviteUsecase(
@@ -117,6 +134,23 @@ func main() {
 	RefreshTokenUsecase := usecase.NewRefreshTokenUsecase(
 		JWTService,
 	)
+	getMeUsecase := usecase.NewGetMeUsecase(userRepo)
+	listSpecializationUsecase := usecase.NewListSpecializationsUsecase(specializationRepo)
+
+	receptionstInviteUsecase := usecase.NewInviteReceptionistUsecase(receptionstInviteRepo , receptionstUserRepo , receptionstemailSender , tokenGen)
+	acceptingInviteUsecase := usecase.NewAcceptInvitationUsecase(receptionstInviteRepo , receptionistAcceptRepo , hasher)
+	getDoctorUsecase := usecase.NewDoctorUsecase(getDoctorRepo)
+	specializationOperationUsecase := usecase.NewSpecializationUsecase(specializationOperationRepo)
+	getDoctorSchedulesUsecase := appointmentUsecase.NewGetDoctorSchedulesUseCase(scheduleRepo , appontmentRepo)
+	getDoctorsUsecase := usecase.NewGetDoctorUsecase(getDoctorsRepo)
+	getPatientUsecase := usecase.NewGetPatientProfileUseCase(patientRepo)
+	getPatientAppointmentUsecase := appointmentUsecase.NewGetPatientAppointmentsUseCase(getPatientAppointmentRepo)
+	reviewAppointmentUsecase := appointmentUsecase.NewSubmitReviewUsecase(bookappointmentRepo ,reviewAppointmentRepo)
+	getDoctorAppointmentUsecase := appointmentUsecase.NewGetDoctorAppointmentsUseCase(getDoctorAppointmentRepo)
+	updatedAppointmentUsecase := appointmentUsecase.NewUpdateAppointmentStatusUseCase(bookappointmentRepo)
+	registerWalkInUsecase := usecase.NewRegisterWalkInPatientUsecase(patientRepo)
+	GetAnalyticUsecase := appointmentUsecase.NewAnalyticsUsecase(getAnalyticRepo)
+	GetDoctorAnalyticsUsecase := appointmentUsecase.NewDoctorAnalyticsUsecase(getDoctorAnalyticRepo , timeoutContext)
 	 
     // Handlers // 
 	registerHandler := controller.NewRegisterUserHandler(registerUsecase)
@@ -130,7 +164,23 @@ func main() {
 	updateScheduleHandler := appointmentController.NewUpdateScheduleHandler(updateScheduleUsecase)
     bookAppointmentHandler := appointmentController.NewBookAppointmentHandler(bookAppointmentUsecase)
 	RefreshTokenHandler := controller.NewRefreshTokenHandler(RefreshTokenUsecase)
-
+	getMeHandler := controller.NewMeHandler(getMeUsecase)
+	logoutHandler := controller.NewLogoutHandler()
+	listSpecializationHandler := controller.NewListSpecializationHandler(listSpecializationUsecase)
+	receptionistInviteHandler := controller.NewReceptionistHandler(receptionstInviteUsecase)
+	acceptingInviteHandler := controller.NewAcceptInvitationHandler(acceptingInviteUsecase)
+	getDoctorHandler := controller.NewGetDoctorHandler(getDoctorUsecase)
+	specializationOperationHandler := controller.NewSpecializationOperationHandler(specializationOperationUsecase)
+	getDoctorScheduleHandler := appointmentController.NewGetDoctorSchedulesHandler(getDoctorSchedulesUsecase)
+	getDoctorsHandler := controller.NewDoctorHandler(*getDoctorsUsecase)
+	getPatientHandler := controller.NewGetPatientProfileHandler(getPatientUsecase)
+	getPatientAppointmentHandler := appointmentController.NewGetPatientAppointmentsHandler(getPatientAppointmentUsecase)
+	reviewAppointmentHandler := appointmentController.NewSubmitReviewHandler(reviewAppointmentUsecase)
+	getDoctorAppointmentHandler := appointmentController.NewGetDoctorAppointmentsHandler(getDoctorAppointmentUsecase)
+	updateAppointmentStatusHandler := appointmentController.NewUpdateAppointmentStatusHandler(updatedAppointmentUsecase)
+	registerWalkInPatientHandler := controller.NewRegisterWalkInPatientHandler(registerWalkInUsecase)
+    getAnalyticHandler := appointmentController.NewAnalyticsHandler(GetAnalyticUsecase)
+	getDoctorAnalyticsHandler := appointmentController.NewDoctorAnalyticsHandler(GetDoctorAnalyticsUsecase)
 
 
 	// Authentication Handlers //
@@ -143,7 +193,16 @@ func main() {
 		DoctorInviation: doctorInvitationHandler,
 		DoctorRegisteration: doctorRegisterationHandler,
 		RefreshToken: RefreshTokenHandler,
-
+		Me: getMeHandler,
+		Logout: logoutHandler,
+		ListSpecialization: listSpecializationHandler,
+		ReceptionistAccepting: acceptingInviteHandler,
+		ReceptionistInvitation: receptionistInviteHandler,
+		GetDoctor: getDoctorHandler,
+        SpecilizationOperation: specializationOperationHandler,
+		GetDoctors: getDoctorsHandler,
+		GetPatient: getPatientHandler,
+		RegisterWalkinPatient: registerWalkInPatientHandler,
 	}
     
 	// Appointment Handler // 
@@ -151,10 +210,17 @@ func main() {
          Create: createScheduleHandler,
 		 GetSlots: getAvailableSlotHandler,
 		 Update: updateScheduleHandler,
+		 GetDoctorSchedules: getDoctorScheduleHandler,	
 	}
 
 	BookingAppointmentHandler := http.AppointmentHandlers{
 		Book: bookAppointmentHandler,
+		GetPatientAppointment: getPatientAppointmentHandler,
+		ReviewAppointment: reviewAppointmentHandler,
+		GetDoctorAppointment: getDoctorAppointmentHandler,
+		UpdateStatus: updateAppointmentStatusHandler,
+		GetAnalytics: getAnalyticHandler,
+		GetDoctorAnalytics: getDoctorAnalyticsHandler,
 	}
 
     
@@ -165,7 +231,7 @@ func main() {
 		Appointment: BookingAppointmentHandler,
 	}
 	r := http.SetupRouter(handlers)
-    
+    _ = r.SetTrustedProxies(nil)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

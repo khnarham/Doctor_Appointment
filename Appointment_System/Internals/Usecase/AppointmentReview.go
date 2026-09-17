@@ -42,12 +42,10 @@ type SubmitReviewUsecase struct {
 func NewSubmitReviewUsecase(
 	appRepo AppointmentRepository,
 	revRepo ReviewRepository,
-	idGen IDGenerator,
 ) *SubmitReviewUsecase {
 	return &SubmitReviewUsecase{
 		appointmentRepo: appRepo,
 		reviewRepo:      revRepo,
-		idGen:           idGen,
 	}
 }
 

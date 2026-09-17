@@ -84,6 +84,8 @@ func (r *patientRegisterRepository) FindByUserId(ctx context.Context, userID str
 	`
 
 	row := exec.QueryRow(ctx, query, userID)
+
+
 	return mapRowToPatient(row)
 }
 
