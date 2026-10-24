@@ -16,6 +16,7 @@ type Handlers struct {
 	Register             *authController.RegisterUserHandler
 	Verification         *authController.EmailVerificationGinHandler
 	Login                *authController.LoginHandler
+	AdminAuth              *authController.AdminAuthHandler
 	AuthMiddleware       AuthorizingMiddleware
 	DoctorInviation      *authController.AdminDoctorHandler
 	DoctorRegisteration  *authController.DoctorRegistrationHandler
@@ -70,9 +71,10 @@ func RegisterAuthRoutes(rg *gin.RouterGroup, h Handlers) {
 		auth.POST("/logout",h.Logout.Logout)
 		auth.POST("/Receptionist-invite", h.ReceptionistInvitation.InviteReceptionist)
 		auth.POST("/Receptionist-accept", h.ReceptionistAccepting.AcceptInvitation)
+		auth.POST("/admin/login",h.AdminAuth.Login)
 
-		auth.POST("/create-specialization", h.CreateSpecialization.Create)
 		auth.GET("/list-specialization" , h.ListSpecialization.ListSpecializations)
+		auth.POST("/create-specialization", h.CreateSpecialization.Create)
 		auth.POST("/Invitation", h.DoctorInviation.InviteDoctor)
 		auth.PUT("/specialization/update/:id", h.SpecilizationOperation.Update)
 		auth.DELETE("/specialization/delete/:id", h.SpecilizationOperation.Delete)

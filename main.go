@@ -64,6 +64,7 @@ func main() {
 	getDoctorAppointmentRepo := appointmentDatabase.NewDoctorAppointmentRepository(db)
     getAnalyticRepo := appointmentDatabase.NewPostgresAnalyticsRepository(db)
 	getDoctorAnalyticRepo := appointmentDatabase.NewDoctorAnalyticsRepository(db)
+	adminLoginRepo := database.NewPostgresAdminRepository(db)
     // Infrastrcuture
 	hasher := Infra.NewBcryptHasher()
 	tokenGen := Infra.NewCryptoCodeGenerator()
@@ -151,6 +152,7 @@ timeoutContext := 5 * time.Second
 	registerWalkInUsecase := usecase.NewRegisterWalkInPatientUsecase(patientRepo)
 	GetAnalyticUsecase := appointmentUsecase.NewAnalyticsUsecase(getAnalyticRepo)
 	GetDoctorAnalyticsUsecase := appointmentUsecase.NewDoctorAnalyticsUsecase(getDoctorAnalyticRepo , timeoutContext)
+	NewAdminLoginUsecase := usecase.NewAuthUseCase(adminLoginRepo, JWTService ,hasher)
 	 
     // Handlers // 
 	registerHandler := controller.NewRegisterUserHandler(registerUsecase)
@@ -181,6 +183,7 @@ timeoutContext := 5 * time.Second
 	registerWalkInPatientHandler := controller.NewRegisterWalkInPatientHandler(registerWalkInUsecase)
     getAnalyticHandler := appointmentController.NewAnalyticsHandler(GetAnalyticUsecase)
 	getDoctorAnalyticsHandler := appointmentController.NewDoctorAnalyticsHandler(GetDoctorAnalyticsUsecase)
+	newAdminLoginHandler := controller.NewAuthHandler(*NewAdminLoginUsecase)
 
 
 	// Authentication Handlers //
@@ -203,6 +206,7 @@ timeoutContext := 5 * time.Second
 		GetDoctors: getDoctorsHandler,
 		GetPatient: getPatientHandler,
 		RegisterWalkinPatient: registerWalkInPatientHandler,
+		AdminAuth: newAdminLoginHandler,
 	}
     
 	// Appointment Handler // 

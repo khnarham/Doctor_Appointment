@@ -46,6 +46,11 @@ type SendVerificationEmail interface{
 	SendVerificationToken(ctx context.Context, to string, token string) error
 }
 
+
+type AdminRepository interface {
+	FindByEmail(email string) (*domain.User, error)
+}
+
 type EmailVerificationRepository interface {
     SaveToken(ctx context.Context, userID string, token string, expiresAt time.Time) error
 }
