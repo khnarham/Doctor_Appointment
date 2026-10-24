@@ -1,6 +1,9 @@
 package http
 
 import (
+	"os"
+	"strings"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
@@ -124,8 +127,15 @@ func RegisterAppointmentRoutes(rg *gin.RouterGroup, h AppointmentHandlers, authM
 func SetupRouter(h AppHandlers) *gin.Engine {
 	r := gin.Default()
 
+allowOriginsEnv := os.Getenv("ALLOWED_ORIGINS")
+	var origins []string
+	if allowOriginsEnv != "" {
+		origins = strings.Split(allowOriginsEnv, ",")
+	} else {
+		origins = []string{"http://localhost:3000"}
+	}
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length", "Set-Cookie"},

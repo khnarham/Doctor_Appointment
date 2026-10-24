@@ -46,9 +46,6 @@ func (uc *AuthUseCase) Login(ctx context.Context, input AdminLoginInput ) (*Veri
 		return &VerificationOutput{},err
 	 }
 
-	if err != nil {
-		return  nil , err
-	}
 
 	     return &VerificationOutput{
           AccessToken: accessToken,
