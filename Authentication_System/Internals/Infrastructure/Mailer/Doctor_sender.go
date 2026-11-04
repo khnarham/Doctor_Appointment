@@ -1,10 +1,12 @@
 package mailer
 
 import (
-    "context"
-    "fmt"
+	"context"
+	"fmt"
+	"os"
+	"strings"
 
-    brevo "github.com/getbrevo/brevo-go/lib"
+	brevo "github.com/getbrevo/brevo-go/lib"
 )
 
 type brevoDoctorVerification struct {
@@ -28,11 +30,17 @@ func (b *brevoDoctorVerification) SendVerificationToken(
     token string,
 ) error {
 
-    verificationURL := fmt.Sprintf(
-        "http://localhost:3000/doctor-registration?token=%s",
-        token,
-    )
+frontendUri := os.Getenv("FRONTEND_URI")
+if frontendUri == "" {
+    frontendUri = "http://localhost:3000"
+}
+frontendUri = strings.TrimRight(frontendUri, "/")
 
+verificationURL := fmt.Sprintf(
+    "%s/doctor-registration?token=%s",
+    frontendUri,
+    token,
+)
     html := fmt.Sprintf(`
         <!DOCTYPE html>
         <html>

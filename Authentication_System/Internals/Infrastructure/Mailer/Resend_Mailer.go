@@ -3,6 +3,8 @@ package mailer
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	brevo "github.com/getbrevo/brevo-go/lib"
 )
@@ -28,11 +30,21 @@ func (b *brevoMailer) SendVerificationToken(
 	token string,
 ) error {
 
-	verificationURL := fmt.Sprintf(
-		"http://localhost:3000/verify-email?token=%s",
-		token,
-	)
 
+	     
+	frontendUri := os.Getenv("FRONTEND_URI")
+	fmt.Println("DEBUG FRONTEND_URI FROM RAILWAY:", os.Getenv("FRONTEND_URI"))
+    if frontendUri == "" {
+    frontendUri = "https://doctor-appointment-frontend-two-xi.vercel.app"
+    }
+    frontendUri = strings.TrimRight(frontendUri, "/")
+
+
+verificationURL := fmt.Sprintf(
+    "%s/verify-email?token=%s",
+    frontendUri,
+    token,
+)
 	html := fmt.Sprintf(`
         <!DOCTYPE html>
         <html>

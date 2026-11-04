@@ -3,6 +3,8 @@ package mailer
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	brevo "github.com/getbrevo/brevo-go/lib"
 )
@@ -29,20 +31,24 @@ func NewBrevoReceptionistMailer(apiKey string, from string, baseURL string) *Bre
 	}
 }
 
-// SendDoctorInviteEmail sends invitation link to candidate receptionist
 func (b *BrevoReceptionistMailer) SendDoctorInviteEmail(
 	ctx context.Context,
 	toEmail string,
 	token string,
 ) error {
 
-	// Direct invitation route configured for receptionist registration
-	inviteURL := fmt.Sprintf(
-		"%s/accept-invite/receptionist-register?token=%s",
-		b.baseURL,
-		token,
-	)
+     
+	frontendUri := os.Getenv("FRONTEND_URI")
+    if frontendUri == "" {
+    frontendUri = "http://localhost:3000"
+    }
+    frontendUri = strings.TrimRight(frontendUri, "/")
 
+    inviteURL := fmt.Sprintf(
+    "%s/accept-invite/receptionist-register?token=%s",
+    frontendUri,
+    token,
+    )
 	html := fmt.Sprintf(`
 		<!DOCTYPE html>
 		<html>
