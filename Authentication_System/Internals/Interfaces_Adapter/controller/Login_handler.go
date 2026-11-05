@@ -54,41 +54,51 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		h.handleUsecaseError(c, err)
 		return
 	} 
+
 isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
 cookieDomain := os.Getenv("COOKIE_DOMAIN") // Vercel ke liye "" (blank) rahe ga
 
+// Cross-site (Railway backend + Vercel frontend) ke liye SameSite None lazmi hai
+sameSiteMode := http.SameSiteLaxMode
+if isProduction {
+    sameSiteMode = http.SameSiteNoneMode
+}
+
 // 1. Access Token Cookie
-c.SetCookie(
-    "access_token",
-    output.AccessToken,
-    900,
-    "/",
-    cookieDomain,   // <-- Yahan dynamic variable aagaya ("localhost" ki jagah)
-    isProduction,   // <-- Production par true, local par false
-    true,
-)
+http.SetCookie(c.Writer, &http.Cookie{
+    Name:     "access_token",
+    Value:    output.AccessToken,
+    Path:     "/",
+    Domain:   cookieDomain,
+    MaxAge:   900,
+    HttpOnly: true,
+    Secure:   isProduction,
+    SameSite: sameSiteMode,
+})
 
 // 2. Refresh Token Cookie
-c.SetCookie(
-    "refresh_token",
-    output.RefreshToken,
-    604800,
-    "/",
-    cookieDomain,   // <-- Yahan bhi dynamic variable
-    isProduction,   // <-- Production par true, local par false
-    true,
-)
+http.SetCookie(c.Writer, &http.Cookie{
+    Name:     "refresh_token",
+    Value:    output.RefreshToken,
+    Path:     "/",
+    Domain:   cookieDomain,
+    MaxAge:   604800,
+    HttpOnly: true,
+    Secure:   isProduction,
+    SameSite: sameSiteMode,
+})
 
 // 3. User Role Cookie
-c.SetCookie(
-    "user_role",
-    output.User.Role,
-    604800,
-    "/",
-    cookieDomain,   // <-- Yahan bhi dynamic variable
-    isProduction,   // <-- Production par true, local par false
-    false,
-)
+http.SetCookie(c.Writer, &http.Cookie{
+    Name:     "user_role",
+    Value:    output.User.Role,
+    Path:     "/",
+    Domain:   cookieDomain,
+    MaxAge:   604800,
+    HttpOnly: false,
+    Secure:   isProduction,
+    SameSite: sameSiteMode,
+})
 	response := loginResponseDTO{
 		AccessToken:  output.AccessToken,
 		RefreshToken: output.RefreshToken,

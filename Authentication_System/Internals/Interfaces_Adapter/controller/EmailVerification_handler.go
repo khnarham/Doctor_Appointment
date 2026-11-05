@@ -36,39 +36,49 @@ func (h *EmailVerificationGinHandler) VerifyEmail(c *gin.Context) {
 	}
 
 isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
+cookieDomain := os.Getenv("COOKIE_DOMAIN")
 
-cookieDomain := os.Getenv("COOKIE_DOMAIN") 
+// Cross-site (Vercel frontend + separate backend) ke liye SameSite None lazmi hai
+sameSiteMode := http.SameSiteLaxMode
+if isProduction {
+    sameSiteMode = http.SameSiteNoneMode
+}
 
-c.SetCookie(
-    "access_token",
-    output.AccessToken,
-    900,           
-    "/",        
-    cookieDomain,  
-    isProduction,  
-    true,       
-)
+// 1. Access Token Cookie
+http.SetCookie(c.Writer, &http.Cookie{
+    Name:     "access_token",
+    Value:    output.AccessToken,
+    Path:     "/",
+    Domain:   cookieDomain,
+    MaxAge:   900,
+    HttpOnly: true,
+    Secure:   isProduction,
+    SameSite: sameSiteMode,
+})
 
-c.SetCookie(
-    "refresh_token",
-    output.RefreshToken,
-    604800,      
-    "/",            
-    cookieDomain,  
-    isProduction,  
-    true,         
-)
+// 2. Refresh Token Cookie
+http.SetCookie(c.Writer, &http.Cookie{
+    Name:     "refresh_token",
+    Value:    output.RefreshToken,
+    Path:     "/",
+    Domain:   cookieDomain,
+    MaxAge:   604800,
+    HttpOnly: true,
+    Secure:   isProduction,
+    SameSite: sameSiteMode,
+})
 
-c.SetCookie(
-    "user_role",
-    output.Role,
-    604800,         
-    "/",         
-    cookieDomain,  
-    isProduction,   
-    false,         
-)
-
+// 3. User Role Cookie
+http.SetCookie(c.Writer, &http.Cookie{
+    Name:     "user_role",
+    Value:    output.Role,
+    Path:     "/",
+    Domain:   cookieDomain,
+    MaxAge:   604800,
+    HttpOnly: false,
+    Secure:   isProduction,
+    SameSite: sameSiteMode,
+})
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "We have Sent an verificaiton link to you Email",
