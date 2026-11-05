@@ -3,10 +3,12 @@ package controller
 import (
 	"errors"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"my-appointment-app/Authentication_System/Internals/Usecase"
+
+	"github.com/gin-gonic/gin"
 )
 
 type loginRequestDTO struct {
@@ -52,39 +54,41 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		h.handleUsecaseError(c, err)
 		return
 	} 
+isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
+cookieDomain := os.Getenv("COOKIE_DOMAIN") // Vercel ke liye "" (blank) rahe ga
 
+// 1. Access Token Cookie
+c.SetCookie(
+    "access_token",
+    output.AccessToken,
+    900,
+    "/",
+    cookieDomain,   // <-- Yahan dynamic variable aagaya ("localhost" ki jagah)
+    isProduction,   // <-- Production par true, local par false
+    true,
+)
 
-	c.SetCookie(
-		"access_token",
-		output.AccessToken,
-		900,
-		"/",
-		"localhost", 
-		false, 
-		true, 
-	)
+// 2. Refresh Token Cookie
+c.SetCookie(
+    "refresh_token",
+    output.RefreshToken,
+    604800,
+    "/",
+    cookieDomain,   // <-- Yahan bhi dynamic variable
+    isProduction,   // <-- Production par true, local par false
+    true,
+)
 
-	c.SetCookie(
-		"refresh_token",
-		output.RefreshToken,
-		604800,
-		"/",
-		"localhost",    
-		false,
-		true,  
-	)
-
-      
+// 3. User Role Cookie
 c.SetCookie(
     "user_role",
     output.User.Role,
     604800,
-    "/",   
-    "",   
-    false, 
-    false, 
+    "/",
+    cookieDomain,   // <-- Yahan bhi dynamic variable
+    isProduction,   // <-- Production par true, local par false
+    false,
 )
-
 	response := loginResponseDTO{
 		AccessToken:  output.AccessToken,
 		RefreshToken: output.RefreshToken,

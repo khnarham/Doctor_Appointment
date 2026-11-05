@@ -3,10 +3,12 @@ package controller
 import (
 	"errors"
 	"net/http"
+	"os"
 
-	"github.com/gin-gonic/gin"
 	jwtPkg "my-appointment-app/Authentication_System/Internals/Infrastructure/JWT"
 	"my-appointment-app/Authentication_System/Internals/Usecase"
+
+	"github.com/gin-gonic/gin"
 )
 
 type RefreshTokenRequest struct {
@@ -62,9 +64,11 @@ func (h *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 		return
 	}
     
-	c.SetCookie("access_token", tokens.AccessToken, 900, "/", "", false, true)
-    c.SetCookie("refresh_token", tokens.RefreshToken, 604800, "/", "", false, true)
-    
+isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
+cookieDomain := os.Getenv("COOKIE_DOMAIN")
+
+c.SetCookie("access_token", tokens.AccessToken, 900, "/", cookieDomain, isProduction, true)
+c.SetCookie("refresh_token", tokens.RefreshToken, 604800, "/", cookieDomain, isProduction, true)    
 	 response := RefreshTokenResponse{
 		AccessToken: tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
