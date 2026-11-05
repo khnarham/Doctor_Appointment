@@ -3,6 +3,7 @@ package controller
 import (
 	"my-appointment-app/Authentication_System/Internals/Usecase"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,36 +35,38 @@ func (h *EmailVerificationGinHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
+isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
 
-	c.SetCookie(
-		"access_token",
-		output.AccessToken,
-		900,
-		"/",
-		"", 
-		false, 
-		true, 
-	)
+cookieDomain := os.Getenv("COOKIE_DOMAIN") 
 
-	c.SetCookie(
-		"refresh_token",
-		output.RefreshToken,
-		604800,
-		"/api/v1/auth/refresh",
-		"",    
-		false,
-		true,  
-	)
+c.SetCookie(
+    "access_token",
+    output.AccessToken,
+    900,           
+    "/",        
+    cookieDomain,  
+    isProduction,  
+    true,       
+)
 
-      
+c.SetCookie(
+    "refresh_token",
+    output.RefreshToken,
+    604800,      
+    "/",            
+    cookieDomain,  
+    isProduction,  
+    true,         
+)
+
 c.SetCookie(
     "user_role",
     output.Role,
-    604800,
-    "/",   
-    "",   
-    false, 
-    false, 
+    604800,         
+    "/",         
+    cookieDomain,  
+    isProduction,   
+    false,         
 )
 
 

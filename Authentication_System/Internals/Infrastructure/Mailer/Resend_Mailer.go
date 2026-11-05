@@ -35,7 +35,7 @@ func (b *brevoMailer) SendVerificationToken(
 	frontendUri := os.Getenv("FRONTEND_URI")
 	fmt.Println("DEBUG FRONTEND_URI FROM RAILWAY:", os.Getenv("FRONTEND_URI"))
     if frontendUri == "" {
-    frontendUri = "https://doctor-appointment-frontend-two-xi.vercel.app"
+    frontendUri = "http://localhost:3000"
     }
     frontendUri = strings.TrimRight(frontendUri, "/")
 
