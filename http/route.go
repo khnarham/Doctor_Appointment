@@ -128,20 +128,20 @@ func SetupRouter(h AppHandlers) *gin.Engine {
 	r := gin.Default()
 
 allowOriginsEnv := os.Getenv("ALLOWED_ORIGINS")
-	var origins []string
-	if allowOriginsEnv != "" {
-		origins = strings.Split(allowOriginsEnv, ",")
-	} else {
-		origins = []string{"http://localhost:3000"}
-	}
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     origins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length", "Set-Cookie"},
-		AllowCredentials: true,
-	}))
+var origins []string
+if allowOriginsEnv != "" {
+    origins = strings.Split(allowOriginsEnv, ",")
+} else {
+    origins = []string{"http://localhost:3000"}
+}
 
+r.Use(cors.New(cors.Config{
+    AllowOrigins:     origins,
+    AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+    AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+    ExposeHeaders:    []string{"Content-Length"}, // <-- Yahan se "Set-Cookie" hta diya hai!
+    AllowCredentials: true,
+}))
 	authMW := h.Auth.AuthMiddleware.Authenticate()
 
 	api := r.Group("/api/v1")
