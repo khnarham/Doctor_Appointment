@@ -36,9 +36,7 @@ func (h *EmailVerificationGinHandler) VerifyEmail(c *gin.Context) {
 	}
 
 isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
-cookieDomain := os.Getenv("COOKIE_DOMAIN")
 
-// Cross-site (Vercel frontend + separate backend) ke liye SameSite None lazmi hai
 sameSiteMode := http.SameSiteLaxMode
 if isProduction {
     sameSiteMode = http.SameSiteNoneMode
@@ -49,7 +47,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "access_token",
     Value:    output.AccessToken,
     Path:     "/",
-    Domain:   cookieDomain,
+    Domain:   "",
     MaxAge:   900,
     HttpOnly: true,
     Secure:   isProduction,
@@ -61,7 +59,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "refresh_token",
     Value:    output.RefreshToken,
     Path:     "/",
-    Domain:   cookieDomain,
+    Domain:   "",
     MaxAge:   604800,
     HttpOnly: true,
     Secure:   isProduction,
@@ -73,7 +71,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "user_role",
     Value:    output.Role,
     Path:     "/",
-    Domain:   cookieDomain,
+    Domain:   "",
     MaxAge:   604800,
     HttpOnly: false,
     Secure:   isProduction,

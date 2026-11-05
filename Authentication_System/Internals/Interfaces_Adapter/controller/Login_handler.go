@@ -56,7 +56,6 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	} 
 
 isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
-cookieDomain := os.Getenv("COOKIE_DOMAIN") // Vercel ke liye "" (blank) rahe ga
 
 // Cross-site (Railway backend + Vercel frontend) ke liye SameSite None lazmi hai
 sameSiteMode := http.SameSiteLaxMode
@@ -69,7 +68,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "access_token",
     Value:    output.AccessToken,
     Path:     "/",
-    Domain:   cookieDomain,
+    Domain:   "",
     MaxAge:   900,
     HttpOnly: true,
     Secure:   isProduction,
@@ -81,7 +80,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "refresh_token",
     Value:    output.RefreshToken,
     Path:     "/",
-    Domain:   cookieDomain,
+    Domain:   "",
     MaxAge:   604800,
     HttpOnly: true,
     Secure:   isProduction,
@@ -93,7 +92,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "user_role",
     Value:    output.User.Role,
     Path:     "/",
-    Domain:   cookieDomain,
+    Domain:   "",
     MaxAge:   604800,
     HttpOnly: false,
     Secure:   isProduction,

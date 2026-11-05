@@ -16,7 +16,6 @@ func NewLogoutHandler() *LogoutHandler {
 
 func (h *LogoutHandler) Logout(c *gin.Context) {
 	isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
-	cookieDomain := os.Getenv("COOKIE_DOMAIN") // Vercel ke liye "" (blank)
 
 	sameSiteMode := http.SameSiteLaxMode
 	if isProduction {
@@ -28,7 +27,7 @@ func (h *LogoutHandler) Logout(c *gin.Context) {
 		Name:     "access_token",
 		Value:    "",
 		Path:     "/",
-		Domain:   cookieDomain,
+		Domain:   "",
 		MaxAge:   -1, // Deletes the cookie immediately
 		HttpOnly: true,
 		Secure:   isProduction,
@@ -40,7 +39,7 @@ func (h *LogoutHandler) Logout(c *gin.Context) {
 		Name:     "refresh_token",
 		Value:    "",
 		Path:     "/",
-		Domain:   cookieDomain,
+		Domain:   "",
 		MaxAge:   -1,
 		HttpOnly: true,
 		Secure:   isProduction,
@@ -51,7 +50,7 @@ func (h *LogoutHandler) Logout(c *gin.Context) {
 		Name:     "user_role",
 		Value:    "",
 		Path:     "/",
-		Domain:   cookieDomain,
+		Domain:   "",
 		MaxAge:   -1,
 		HttpOnly: false,
 		Secure:   isProduction,
