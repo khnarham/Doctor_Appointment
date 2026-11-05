@@ -37,46 +37,16 @@ func (h *EmailVerificationGinHandler) VerifyEmail(c *gin.Context) {
 
 isProduction := os.Getenv("GIN_MODE") == "release" || os.Getenv("ENV") == "production"
 
+// 1. Pehle Gin ka SameSite context set karo
 sameSiteMode := http.SameSiteLaxMode
 if isProduction {
     sameSiteMode = http.SameSiteNoneMode
 }
+c.SetSameSite(sameSiteMode)
 
-// 1. Access Token Cookie
-http.SetCookie(c.Writer, &http.Cookie{
-    Name:     "access_token",
-    Value:    output.AccessToken,
-    Path:     "/",
-    Domain:   "",
-    MaxAge:   900,
-    HttpOnly: true,
-    Secure:   isProduction,
-    SameSite: sameSiteMode,
-})
-
-// 2. Refresh Token Cookie
-http.SetCookie(c.Writer, &http.Cookie{
-    Name:     "refresh_token",
-    Value:    output.RefreshToken,
-    Path:     "/",
-    Domain:   "",
-    MaxAge:   604800,
-    HttpOnly: true,
-    Secure:   isProduction,
-    SameSite: sameSiteMode,
-})
-
-// 3. User Role Cookie
-http.SetCookie(c.Writer, &http.Cookie{
-    Name:     "user_role",
-    Value:    output.Role,
-    Path:     "/",
-    Domain:   "",
-    MaxAge:   604800,
-    HttpOnly: false,
-    Secure:   isProduction,
-    SameSite: sameSiteMode,
-})
+c.SetCookie("access_token", output.AccessToken, 900, "/", "", isProduction, true)
+c.SetCookie("refresh_token", output.RefreshToken, 604800, "/", "", isProduction, true)
+c.SetCookie("user_role", output.Role, 604800, "/", "", isProduction, false)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "We have Sent an verificaiton link to you Email",
