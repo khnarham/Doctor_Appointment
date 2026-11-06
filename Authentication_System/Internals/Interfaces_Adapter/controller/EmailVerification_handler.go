@@ -44,11 +44,11 @@ if isProduction {
     sameSiteMode = http.SameSiteNoneMode
 }
 c.SetSameSite(sameSiteMode)
-
-c.SetCookie("access_token", output.AccessToken, 900, "/", "", isProduction, true)
-c.SetCookie("refresh_token", output.RefreshToken, 604800, "/", "", isProduction, true)
-c.SetCookie("user_role", output.Role, 604800, "/", "", isProduction, false)
-fmt.Printf("Set-Cookie headers[FIND THE ERROR HERE]: %v",
+Domain:= ".vortexcodelabs.com"
+c.SetCookie("access_token", output.AccessToken, 900, "/", Domain, isProduction, true)
+c.SetCookie("refresh_token", output.RefreshToken, 604800, "/", Domain, isProduction, true)
+c.SetCookie("user_role", output.Role, 604800, "/", Domain, isProduction, false)
+fmt.Printf("Set-Cookie headers[FIND THE ERROR]: %v",
     c.Writer.Header().Values("Set-Cookie"),
 )
 

@@ -63,12 +63,13 @@ if isProduction {
     sameSiteMode = http.SameSiteNoneMode
 }
 
+Domain:= ".vortexcodelabs.com"
 // 1. Access Token Cookie
 http.SetCookie(c.Writer, &http.Cookie{
     Name:     "access_token",
     Value:    output.AccessToken,
     Path:     "/",
-    Domain:   "",
+    Domain:   Domain,
     MaxAge:   900,
     HttpOnly: true,
     Secure:   isProduction,
@@ -80,7 +81,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "refresh_token",
     Value:    output.RefreshToken,
     Path:     "/",
-    Domain:   "",
+    Domain:   Domain,
     MaxAge:   604800,
     HttpOnly: true,
     Secure:   isProduction,
@@ -92,7 +93,7 @@ http.SetCookie(c.Writer, &http.Cookie{
     Name:     "user_role",
     Value:    output.User.Role,
     Path:     "/",
-    Domain:   "",
+	Domain: Domain,
     MaxAge:   604800,
     HttpOnly: false,
     Secure:   isProduction,

@@ -138,7 +138,7 @@ if allowOriginsEnv != "" {
 r.Use(cors.New(cors.Config{
     AllowOrigins:     origins,
     AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-    AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+    AllowHeaders:     []string{"Origin", "Content-Type", "Authorization","Accept"},
     ExposeHeaders:    []string{"Content-Length"}, 
     AllowCredentials: true,
 }))
