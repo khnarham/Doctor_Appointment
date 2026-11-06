@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"my-appointment-app/Authentication_System/Internals/Usecase"
 	"net/http"
 	"os"
@@ -47,6 +48,9 @@ c.SetSameSite(sameSiteMode)
 c.SetCookie("access_token", output.AccessToken, 900, "/", "", isProduction, true)
 c.SetCookie("refresh_token", output.RefreshToken, 604800, "/", "", isProduction, true)
 c.SetCookie("user_role", output.Role, 604800, "/", "", isProduction, false)
+fmt.Printf("Set-Cookie headers[FIND THE ERROR HERE]: %v",
+    c.Writer.Header().Values("Set-Cookie"),
+)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "We have Sent an verificaiton link to you Email",

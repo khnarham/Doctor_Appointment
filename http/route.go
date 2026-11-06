@@ -139,7 +139,7 @@ r.Use(cors.New(cors.Config{
     AllowOrigins:     origins,
     AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
     AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-    ExposeHeaders:    []string{"Content-Length"}, // <-- Yahan se "Set-Cookie" hta diya hai!
+    ExposeHeaders:    []string{"Content-Length"}, 
     AllowCredentials: true,
 }))
 	authMW := h.Auth.AuthMiddleware.Authenticate()
